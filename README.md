@@ -189,3 +189,131 @@ function foo() {
 
 ### chapter 5 作用域和闭包
 
+### chapter 6 关于this
+
+this是在调用时进行绑定的，而不是声明的时候，它的指向取决于函数在哪里被调用
+
+参考文献：https://www.cnblogs.com/pssp/p/5216085.html           https://www.jianshu.com/p/fcbc21a2c507
+
+1.如果一个函数中有this，且没有被其他函数调用，则指向window，严格模式下为undefined
+
+```
+
+function foo() {
+
+    console.log( this.a );
+}
+
+var a = 2;
+
+foo(); // 2
+
+function foo() {
+
+    "use strict";
+
+    console.log( this.a );
+}
+
+var a = 2;
+
+foo(); // TypeError: `this` is `undefined`
+
+```
+
+2. 如果一个函数中有this，这个函数有被上一层函数调用，那么this指向上层函数
+
+```
+
+function foo() {
+
+    console.log( this.a );
+}
+
+var obj = {
+
+    a: 2,
+
+    foo: foo
+};
+
+obj.foo(); // 2
+
+```
+
+3. 如果一个函数中有this，这个函数中包含多个对象，尽管这个函数是被最外层的对象所调用，this指向的也只是它上一级的对象
+
+```
+
+function foo() {
+
+    console.log( this.a );
+}
+
+var obj2 = {
+
+    a: 42,
+
+    foo: foo
+};
+
+var obj1 = {
+
+    a: 2,
+
+    obj2: obj2
+};
+
+obj1.obj2.foo(); // 42
+
+```
+
+4. this与构造函数
+
+```
+
+function Fn(){
+
+    this.user = "tom";
+
+}
+
+var a = new Fn();
+
+console.log(a.user); // tom
+
+```
+
+5. 如果返回值是一个对象，那么this指向的就是那个返回的对象，如果返回值不是一个对象那么this还是指向函数的实例，注意，虽然null也是对象，但是在这里this还是指向那个函数的实例，因为null比较特殊
+
+### chapter 7 JavaScript中的对象
+
+创建对象有两种方法：
+
+1. 对象字面量
+
+var obj = {
+
+    name: tom,
+
+    age: 18,
+
+    ...
+}
+
+2. 构造函数
+
+var obj = new Object();
+
+obj.name = tom;
+
+obj.age = 18;
+
+JS中有六种主要的数据类型： string number boolean undefined null object
+
+前五个是基本类型，注意 typeof null，得到的是object
+
+JS中有一些内置对象：String Number Boolean Object Function Array Date RegExp Error，它们实际上是一些内置函数，它们可以当做构造函数来使用。
+
+注意，'i am a string'本质上不是一个String对象，而是一个字面量，如果我们要对他进行操作，需要将他转换成String对象。但是通常我们不用这么做，因为JS已经自动转换了。
+
