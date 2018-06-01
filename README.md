@@ -317,3 +317,134 @@ JS中有一些内置对象：String Number Boolean Object Function Array Date Re
 
 注意，'i am a string'本质上不是一个String对象，而是一个字面量，如果我们要对他进行操作，需要将他转换成String对象。但是通常我们不用这么做，因为JS已经自动转换了。
 
+3. 浅拷贝与深拷贝
+
+4. Object.defineProperty
+
+```
+
+var obj = {};
+
+Object.defineProperty(obj, 'a', {
+
+    value: 2,
+
+    writable: false,        // 不可写   obj.a = 3赋值操作无效, 严格模式下会报错
+
+    configurable: false,    // 不可配置
+
+    enumerable: false        // 不可枚举
+
+})
+
+```
+
+enumerable详细介绍：
+
+```
+
+var obj = {};
+
+object.defineProperty(obj, 'a', {
+
+    enumerable: true,
+
+    value: 2
+
+})
+
+object.defineProperty(obj, 'b', {
+
+    enumerable: false,
+
+    value: 3
+
+})
+
+obj.b; // 3
+
+('b' in obj); // true
+
+obj.hasOwnProperty('b') // true
+
+for (var k in obj) {
+
+    console.log(k, obj[k]); // 'a', 2
+
+}
+
+```
+
+上述代码意思就是，当设置enumerable为false时，obj.b确实存在且有值，但是无法出现在对象属性的遍历中
+
+对象的get
+
+```
+
+var obj = {
+
+    a: 2;
+}
+
+obj.a; // 2
+
+```
+
+上述代码实际上是实现了get的操作（有点像函数的调用），对象默认的内置get操作首先在对象中查找是否有名称相同的属性，如果找到就会返回这个属性的值
+
+若没有找到，将会执行另一个操作，即遍历可能存在的原型链
+
+若还没有找到，则返回undefined
+
+对象的put
+
+put被触发时，实际的行为取决于许多因素，包括对象中是否已经存在这个属性，如果已经存在：
+
+1. 属性是否是访问描述符，是并且存在setter则调用setter；
+
+2. 属性的数据描述符中writable是否是false，是，在非严格模式下静默失败，在严格模式下将抛出异常
+
+3. 若都不是，则将该值设置为属性的值
+
+在es5中，可以使用getter和setter部分改写默认操作，但是只能应用在单个属性上，无法应用在整个属性上，getter和setter是一个隐藏函数，前者会在获取属性值时调用，后者在设置属性值时调用
+
+
+我们通过hasOwnProperty来判断对象本身中是否存在这个属性，不会沿着原型链查找
+
+但是有时有的对象没有连接到Object.prototype上，我们可以强硬的进行判断： Object.prototype.hasOwnProperty.call(obj, 'a')
+
+上面我们提到用for in 对对象进行遍历，但是如何遍历属性的值呢？
+
+数组：
+
+```
+
+let arr = [1, 2, 3]
+
+for (let i = 0; i < arr.length; i++) {
+    
+    console.log(arr[i]) // 1 2 3
+
+}
+
+```
+
+这实际上并不是在遍历值，而是在遍历数组的小标来取值
+
+for in遍历对象是无法直接获取到属性的值的，它实际上遍历的是对象中所有可枚举的属性，你要手动去获取属性值。数组的遍历采用的是数字顺序，即数组的下标，而对象不行，对象属性的属性是不确定的，在任何时候都不要去遍历对象的数字顺序来取值！！！
+
+那么如何直接遍历值而不是数组下标呢，在es6中，提供了遍历数组的方法 for of
+
+```
+
+var arr = [1, 2, 3];
+
+for (let v of arr) {
+
+    console.log(v); // 1 2 3
+
+}
+
+```
+
+### chapter 7 JavaScript中的类
