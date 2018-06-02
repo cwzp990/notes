@@ -516,7 +516,7 @@ obj.b; // 3
 
 多年来，JS一直有一种奇怪的行为在被滥用，那就是模仿类。这个行为实际上是利用了函数的一种特殊性，所有的函数默认都会拥有一个prototype公有的不可枚举的属性，它会指向另一个对象，这个对象就是该对象的原型（obj.prototype）
 
-![prototype-pic2](https://github.com/cwzp990/note/blob/master/images/prototype_1.png)
+![prototype-pic2](https://github.com/cwzp990/notes/blob/master/images/prototype_1.png)
 
 在面向类的语言中，类可以被复制（实例化）多次，实例化一个类就是把一个类的行为复制到物理对象中，但是在JS中，并没有类似的复制机制，你不能创建
 
