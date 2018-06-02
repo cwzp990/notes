@@ -510,7 +510,7 @@ obj.b; // 3
 
 如果属性a既存在obj中也存在prototype上层，那么会发生屏蔽。obj中包含的属性a会屏蔽原型链上层所有a属性，obj.a总是会选择原型链中最底层的foo属性
 
-### 1. 再说类
+### 1. 再谈类
 
 为什么之前要将一个对象和另一个对象进行关联，这是因为，在JS中，并没有类的概念，JS里只有对象！
 
@@ -520,6 +520,254 @@ obj.b; // 3
 
 在面向类的语言中，类可以被复制（实例化）多次，实例化一个类就是把一个类的行为复制到物理对象中，但是在JS中，并没有类似的复制机制，你不能创建
 
-一个类的多个实例，只能创建多个对象，它们的prtotype关联的是同一个对象。通过new关键字，如 var cat = new Animal(),将cat._proto_和
+一个类的多个实例，只能创建多个对象，它们的prtotype关联的是同一个对象。通过new关键字，如 var cat = new Animal(),将cat._proto_和Animal.prototype关联起来，这样一个对象就能通过委托访问另一个对象的属性和函数
 
+<<<<<<< HEAD
+### 2. 再谈构造函数
+
+上述代码里谈到每一个函数都有一个prototype属性，指向一个对象，obj.prototype，即他的原型。而这个对象里有一个constructor属性，又指回这个函数。而在我们创建一个对象的时候，如 var cat = new Animal()，创建的对象也有一个constructor属性，指向创建这个对象的函数：cat.constructor === Animal。
+
+在这里，Animal还是一个普通的函数，只不过new会劫持所有普通的函数并用构造对象的形式来调用它。
+
+```
+
+function Animal() {
+
+    console.log(animal);
+
+}
+
+var cat = new Animal()
+
+```
+
+上述代码中，Animal只是一个普通的函数，在调用new的时候，就构造了一个对象并赋值给了cat，这个调用是一个构造函数的调用，但是Animal本身并不是一个构造函数。在JS中，对于构造函数准确的说法是，所有带new的函数的调用。即函数不是构造函数，当且仅当使用new时，函数调用会变成“构造函数调用”。
+
+JS开发者一直在模仿类的行为：
+
+```
+
+function Animal(name) {
+
+    this.name = name;
+
+    this.voice = 'miaomiao'
+
+}
+
+Animal.prototype.sayName = function() {
+    return this.name
+}
+
+var cat1 = new Animal('tom');
+
+var cat2 = new Animal('jerry');
+
+cat1.sayName(); // tom
+
+cat2.sayName(); // jerry
+
+```
+
+在创建的过程中，cat1和cat2内部prototype都会关联到Animal.prototype上，当在cat1，cat2上没找到sayName时，它会委托在Animal.prototype上找到。
+
+而上面提到的cat.constructor === Animal同样委托了Animal.prototype，而Animal.prototype.constructor默认指向Animal，举例说明：
+
+```
+
+function Animal() {
+    ...
+}
+
+Animal.prototype = {}                   <--- 我们在这里重新定义了Animal.prototype的指向
+
+var cat = new Animal()
+
+cat.constructor === Animal; // false    <--- 实际上cat并没有constructor属性，它会委托prototype上的Animal.prototype，它也没有（因                                              为我们上面更改了，默认是有的），所以它会继续委托，这次委托给顶端的Object.prototype，                                                它有这个属性，所以指向了Object
+
+cat.constructor === Object; // true
+
+```
+
+constructor并不是一个不可变的属性，它是不可枚举的，但是它的值是可写的（可修改的）
+
+### 3. 原型继承
+
+前面我们了解到cat可以“继承”Animal.prototype并访问Animal.prototype的sayName()方法
+
+```
+
+function Animal (name) {
+
+    this.name = name;
+
+}
+
+Animal.prototype.sayName = function() {
+
+    return this.name
+
+}
+
+function Person(name, age) {                            <--- 这里同时会将Person.prototype关联到默认的对象（Person.prototype），                                                               然而我们并不想这样，因此我们需要更改
+
+    Animal.call(this, name);
+
+    this.age = age;
+
+}
+
+// es6以前的写法
+
+Person.prototype = Object.create(Animal.prototype);     <--- 这里会凭空创建一个新的对象并把对象内部的prototype关联到你指定的                                                                   Animal.prototype对象，即创建一个Person.prototype，并把它与                                                                      Animal.prototype相关联
+
+// es6的写法
+
+Object.setPrototypeOf(Person.prototype, Animal.prototype);
+
+
+Person.prototype.sayAge = function() {
+
+    return this.age
+
+}
+
+var tom = new Person('tom', 18)
+
+tom.sayName; // 'tom'
+
+tom.sayAge; // 18
+
+```
+
+这两个做法不正确：
+
+Person.prototype = Animal.prototype
+
+Person.prototype = new Animal()                         // 有副作用 函数Animal会影响Person的后代
+
+### 4. 检查“类”的关系
+
+我们通常使用instanceof来检测一个实例是否继承自它的祖先关系，instanceof左侧是一个对象a，而右侧是一个函数b，意思是，在a原型链中是否有指向b.prototype的对象，而当你想判断两个对象之间的关系时，无法实现。
+
+b.prototype.isPrototypeOf(a)    // true
+
+在上述代码中，我们甚至不需要关心b，我们只需要一个可以用来判断的对象，如b.prototype，意思是，在a的整条原型链中，是否出现过b.prototype。在这里，我们不需要间接引用函数b，它的.prototype属性会自动访问
+
+我们可以直接获取一个对象的原型链，es5中标准方法为
+
+Object.getPrototypeOf(a) === b.prototype
+
+也可以这样写：
+
+a._proto_ === b.prototype
+
+#### 5. 对象关联
+
+prototype就是存在于对象中的一个内部机制，实际上原型链的作用是：如果在对象上没有找到需要的属性或者方法，引擎就会继续沿着原型链往下查找，如果在后者依旧没有找到，就会沿着后者继续往下查找，以此类推。
+
+我们知道，使用new关键字会生成.prototype和.constructor引用，而Object.create不会，它可以完美的创建我们需要的关联关系。
+
+注：
+
+```
+
+var another_obj = {
+
+    cool: function() {
+
+        console.log('cool');
+
+    }
+
+}
+
+var obj = Object.create(another_obj);
+
+obj.cool; // 'cool'             <--- 不推荐这种写法，
+
+obj.doCool = function() {
+
+    this.cool();                <--- 内部委托
+}
+
+obj.doCool(); // 'cool'
+
+```
+
+### chapter 8 行为委托
+
+#### 1. 类理论
+
+类的设计模式大体是这样的：定义一个通用的父类，如Animal，在Animal中定义所有任务都有的行为，然后定义子类cat，它继承自Animal并且会添加一些特殊的行为来处理对应的任务。
+
+在类设计模式中，鼓励在继承时使用方法重写和多态。你会发现许多行为可以先“抽象”到父类然后再用子类进行转化（重写）。
+
+我们可以实例化子类cat的一些副本然后使用这些实例来执行任务，这些实例会复制父类定义的通用行为以及子类自己定义的特殊行为。在构造完成后，你通常只需要操作这些实例而不是类，因为每个实例都有你需要完成任务的所有行为。
+
+### 2. 委托理论
+
+首先我们定义一个Animal的对象，它包含所有任务都可以使用的具体行为。接着对于每一个任务，你都会定义一个对象来存储对应的数据和行为。他会把特定的任务对象都关联到Animal功能对象上，让它们在需要的时候可以进行委托。
+
+```
+
+Animal = {
+
+    name: function(name) {
+
+        this.name = name;
+
+    }
+
+}
+
+cat = Object.create(Animal);
+
+cat.sayName = function(name, voice) {
+
+    this.name(name);
+
+    this.voice = 'miaomiao'
+
+}
+
+```
+
+下面的代码在chrome和firefox上得出的结果并不相同：
+
+```
+
+function Foo() {}
+
+var a = new Foo();
+
+a;      // 在chrome上显示 Foo {}，在firefox上显示 Object {}
+
+```
+
+原因：
+
+```
+
+var foo = {};
+
+var a = Object.create(foo);
+
+// chrome下：foo.prototype.constructor = function newFoo() {};
+
+a; // Object {}
+
+Object.definePorperty(foo, 'constructor', {
+
+    enumerable: false,
+
+    value: function newFoo() {}
+
+})
+
+a; // newFoo {}         <--- chrome使用了a.constructor.name进行跟踪
+
+```
+=======
 Animal.prototype关联起来，这样一个对象就能通过委托访问另一个对象的属性和函数
+>>>>>>> 315bc88cc64217a39260c06c9183a78d86129a19
