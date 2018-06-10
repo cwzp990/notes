@@ -283,3 +283,534 @@ var a=new A();
 console.log(a.name)
 
 ```
+
+### 1.5 call和apply
+
+apply接受两个参数，第一个参数指定函数体内this对象的指向，第二个参数为一个带下标的集合，这个集合可以是数组也可以是类数组
+
+call传入参数不固定，第一个参数指定this对象的指向，第二个参数往后，每个参数被依此传入函数
+
+当使用call或apply的时候，如果我们传入的第一个参数为null，函数体内的this会指向默认的宿主对象，浏览器里是window
+
+### 1.6 call和apply的用途
+
+1. 改变this指向
+
+```
+
+var obj1={
+	name: 'sven';
+}
+
+var obj2={
+	name: 'anne';
+}
+
+window.name='window';
+
+var getName=function(){
+
+	alert(this.name);
+}
+
+getName()			// window
+getname.call(obj1)	// sven
+getname.call(obj2)	// anne
+
+```
+
+2. Function.prototype.bind
+
+```
+
+Function.prototype.bind=function(context){
+
+	var self=this;								// 保存原函数
+	var context=[].shift.call(arguments);		// 需要绑定的this上下文
+	var args=[].slice.call(arguments);			// 剩余参数转成数组
+	return function(){							
+		return self.apply(context, [].cancat.call(args,[].slice.call(arguments))); 
+												// 执行新函数时，会把之前传入的context当作新函数体内的this
+												// 并且组合两次分别传入的参数，作为新函数的参数
+	}
+}
+
+var obj={
+	name: 'sven';
+}
+
+var func=function(){
+	
+	alert(this.name);							// sven
+	alert([a,b,c,d,e]);							// [1,2,3,4]
+}.bind(obj,1,2)
+
+func(3,4)
+
+```
+
+3. 借用其他对象的方法
+
+```
+
+// 在构造函数中，实现继承
+
+var A=function(name){
+
+	this.name=name;
+}
+
+var B=function(){
+
+	A.apply(this,arguments);
+}
+
+B.prototype.getName=function(){
+	
+	return this.name;
+}
+
+var b=new B('sven');
+
+console.log(b.getName());		// sven
+
+```
+
+### chapter 3 闭包和高阶函数
+
+### 3.1 闭包
+
+1. 封装变量
+
+闭包可以帮助把一些不需要暴露在全局的变量封装成“私有变量”
+
+2. 延续局部变量的寿命
+
+### 3.1 闭包和面向对象设计
+
+```
+
+var extent=function(){
+
+	var value=0;
+	return {
+		call: function(){
+			value++;
+			console.log(value)
+		}
+	}
+}
+
+var extent=extent();
+
+extent.call();			// 1
+
+extent.call();			// 2
+
+extent.call();			// 3
+
+// 面向对象的写法
+
+var extent={
+
+	value:0,
+	call:function(){
+		this.value++;
+		console.log(this.value)
+	}
+}
+
+// 或者
+
+var Extent=function(){
+
+	this.value=0;
+}
+
+Extent.prototype.call=function(){
+
+	this.value++;
+	console.log(this.value);
+}
+
+var extent=new Extent();
+
+extent.call();
+
+```
+
+### 3.2 用闭包实现命令模式
+
+```
+
+// 面向对象的方式
+
+var Tv={
+
+	open: function(){
+		console.log('open tv');
+	},
+	close: function(){
+		console.log('close tv');
+	}
+}
+
+var OpenTvCommand=function(receiver){
+
+	this.receiver=receiver;
+}
+
+OpenTvCommand.prototype.execute=function(){
+
+	this.receiver.open();			// 执行打开电视命令
+}
+
+CLoseTvCommand.prototype.excute=function(){
+
+	this.receiver.close();			// 执行关闭电视命令
+}
+
+var setCommand=function(command){
+
+	document.getElementById('execute').onclick=function(){
+		command.execute();			// 输出：open tv
+	}
+
+	document.getElementById('undo').onclick=function(){
+		command.undo();				// 输出：close tv
+	}
+}
+
+setCommand(new OpenTvCommand(Tv));
+
+```
+
+命令模式的意图是把请求封装为对象，从而分离请求的发起者和请求的接收者（执行者）之间的耦合关系。在命令被执行之前，可以预先往命令对象中植入命令的接收者。
+
+```
+
+// 闭包的方式
+
+var Tv={
+
+	open: function(){
+		console.log('open tv');
+	},
+	close: function(){
+		console.log('close tv');
+	}
+}
+
+var createCommand=function(receiver){
+	
+	var excute=function(){
+		return receiver.open();		// 执行打开电视命令
+	}
+
+	var undo=function(){
+		return receiver.close();	// 执行关闭电视命令
+	}
+
+	return {
+		execute:execute,
+		undo:undo
+	}
+}
+
+var setCommand=function(command){
+
+	document.getElementById('execute').onclick=function(){
+		command.execute();			// 输出：open tv
+	}
+
+	document.getElementById('undo').onclick=function(){
+		command.undo();				// 输出：close tv
+	}
+}
+
+setCommand(createCommand(Tv));
+
+```
+
+### 3.3 高阶函数
+
+高阶函数必须满足下列条件之一：
+
+1. 函数可以作为参数被传递
+2. 函数可以作为返回值输出
+
+#### 3.3.1 函数作为参数传递
+
+1. 回调函数
+
+2. Array.prototype.sort
+
+它接收一个函数当作参数，这个函数里面封装了数组元素的排序规则，从Array.prototype.sort的使用可以看到，我们的目的是对数组进行排序，这是不变的部分，而使用什么规则进行排序是可变的。因此，将可变的部分封装在函数参数里，动态传入Array.prototype.sort：
+
+```
+
+// 从小到大
+
+[1,4,3].sort(function(a,b){
+
+	return a-b;				// [1,3,4]
+})
+
+// 从大到小
+
+[1,4,3].sort(function(a,b){
+
+	return b-a;				// [4,3,1]
+})
+
+```
+
+#### 3.3.2 函数作为返回值输出
+
+```
+
+// 判断数据类型
+
+var isType=function(type){
+
+	return function(obj){
+		return Object.prototype.toString.call(obj)==='[Object'+ type +']';
+	}
+}
+
+// 单例模式
+
+var getSingle=function(fn){
+
+	var ret;
+
+	return function(){
+		return ret || (ret=fn.apply(this, arguments));
+		
+	}
+
+}
+
+```
+
+### 3.3 高级函数实现AOP
+
+AOP(面向切面编程)的主要作用是把一些跟核心业务逻辑模块无关的功能抽离出来，这些跟业务逻辑无关的功能通常包括日志统计、安全控制、异常处理等。把这些功能抽离出来之后，再通过“动态植入”的方式掺入业务逻辑模块中。通常，在JS中实现AOP，都是指把一个函数“动态植入”到另一个函数之中，具体实现的技术有很多，本书我们通过扩展Function.prototype来做到这一点。
+
+```
+
+Function.prototype.before=function(beforefn){
+	
+	ver _self=this;
+	return function(){
+		beforefn.apply(this, arguments);
+		return _self.apply(this, arguments);
+	}
+}
+
+Function.prototype.after=function(afterfn){
+	
+	var _self=this;
+	return function(){
+		var ret=_self.apply(this, arguments);
+		afterfn.apply(this, arguments);
+		return ret;
+	}
+}
+
+var func=fuction(){
+	console.log(2);
+}
+
+func=func.before(function(){
+	
+	console.log(1);
+}).after(function(){
+	console.log(3);
+});
+
+func();
+
+```
+
+### 3.3 高级函数的其他应用
+
+1. currying
+
+首先我们讨论的是函数柯里化。currying又称部分求值。一个currying的函数首先会接受一些参数，接受的这些参数以后，该函数并不会立即求值，而是继续返回另一个函数，刚才传入的参数在函数形成的闭包中被保存起来。待到函数被真正需要求值的时候，之前传入的所有参数都会被一次性用于求值。
+
+```
+
+// 计算月开销函数
+
+var monthlyCost=0;
+
+var cost=function(money){
+	
+	monthlyCost+=money;
+}
+
+cost(100);
+cost(200);
+cost(300);
+
+// 输出60
+
+
+// currying
+
+var currying=function(fn){
+	
+	var args=[];
+	return function(){
+		if (arguments.length===0){
+			return fn.apply(this,args);
+		} else {
+			[].push.apply(args,arguments);
+			return arguments.callee;
+		}
+	}
+}
+
+var cost=(function(){
+	
+	var money=0;
+	return function(){
+		for (i=0,l=arguments.length;i<l;i++){
+			money+=arguments[i];
+		}
+		return money;
+	}
+})();
+
+var cost=curry(cost);			// 转化成currying函数
+
+cost(100);						// 未真正求值
+
+cost(200);						// 未真正求值
+
+cost(300);						// 未真正求值
+
+alert(cost());					// 输出600 
+
+```
+
+uncurrying
+
+```
+
+Function.prototype.uncurrying=function(){
+	
+	var self=this;			// 此时是Array.prototype.push
+	return function(){
+		var obj=Array.prototype.shift.call(arguments);
+							// obj={length: 1, 0: 1}
+							// arguments的第一个对象被截去，剩下[2]
+		return self.apply(obj, arguments);
+							// 相当于 Array.prototype.push.apply(obj, 2)
+	}
+}
+
+var push=Array.prototype.push.uncurrying();
+
+var obj={
+
+	'length': 1,
+	'0': 1
+};
+
+push(obj, 2);
+
+console.log(obj);			// 输出 {0:1,1:2,length:2}
+
+```
+
+3. 函数节流
+
+window.onresize事件
+
+我们给window对象绑定了resize事件，当浏览器窗口大小被拖动而改变的时候，这个事件触发的频率非常之高，如果我们在window.onresize事件函数里有一些跟dom节点相关的操作，而跟dom节点相关的操作是非常消耗性能的，这是浏览器可能因吃不消而导致卡顿。
+
+同理，还有mouseover事件等
+
+函数节流的原理：上述场景导致的问题都是函数被触发的频率太高。我们可以利用setTimeout将即将被执行的函数延迟一段处理，如果这次延迟执行还没有完成，则忽略接下来调用该函数的请求。
+
+```
+
+var throttle=function(fn, interval){
+
+	var _self=fn,							// 保存需要被延迟执行的函数的引用
+		timer,								// 定时器
+		firstTime=true;						// 是否第一次调用
+
+	return function(){
+		var args=arguments,
+			_me=this;
+		if(firstTime){						// 第一次调用不需要延迟执行
+			_self.apply(_me,args);
+			return firstTime=false;
+		}
+		if(timer){							// 如果定时器还在，说明前一次延迟执行还没有完成
+			return false;
+		}
+		timer=setTimerout(function(){		// 延迟一段时间执行
+			clearTimerout(timer);
+			timer=null;
+			_self.apply(_me,args);
+		}, interval || 500);
+	}
+}
+
+window.onresize=throttle(function(){
+	console.log(1);
+}, 500)
+
+```
+
+4. 分时函数
+
+当我们在页面中渲染一个列表时，可能要一次性往页面中创建成百上千个节点，这种短时间内往页面中大量添加dom节点显然也会让浏览器吃不消，导致浏览器卡顿或假死。解决方法是，我们可以让创建节点的工作分批次进行，如把1s创建1000个节点分成每200ms创建8个节点。
+
+```
+
+var timeChunk=function(ary, fn, count){
+	
+	var obj, t;
+	var len=arr.length;
+	var start=function(){
+		for(var i=0,l<Math.min(count || 1, ary.length);i++){
+			var obj=ary.shift();
+			fn(obj);
+		}
+	}
+	return function(){
+		t=setInterval(function(){
+			if (ary.length===0){
+				return clearInterval(t)
+			}
+			start();
+		}, 200)
+	}
+}
+
+// 分批次往页面中创建8个节点
+
+var ary=[];
+
+for(var i=1;i<=1000; i++){
+	
+	ary.push(i);
+}
+
+var renderFiendList=timerChunk(ary, function(n){
+	
+	var div=document.createElement('div');
+	div.innerHtml=n;
+	document.body.appendChild(div);
+}, 8);
+
+renderFriendList();
+
+```
+
+5.惰性懒加载
