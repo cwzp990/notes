@@ -11,5 +11,5 @@
 
 在JS中，我们可以用typeof运算符来查看值的类型
 
-![Image text](https://raw.githubusercontent.com/hongmaju/light7Local/master/img/productShow/20170518152848.png)
+![Image text](https://github.com/cwzp990/notes/blob/master/images/type1.png)
 
