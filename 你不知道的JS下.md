@@ -148,3 +148,114 @@ NaN 和 -0在相等比较时的表现有些特别，在es6中，我们可以用O
 Object.is(2 / 'foo', NaN)       // true
 
 Object.is(-0, 0)        // false
+
+#### 2.6 值和引用
+
+JS中，变量不可能成为指向另一个变量的引用，JS中，引用指向的是值。如果一个值有10个引用，这些引用指向的都是同一个值，它们相互之间没有引用/指向关系。
+
+简单值都是通过值复制的方式来赋值、传递，包括null、undefined、字符串、数字、布尔和es6中的symbol
+
+复合值（对象、数组）通过引用复制的方式来传递
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/val1.png)
+
+我们可以发现，变量a持有该值的一个复本，b持有它的另一个复本，b改变时，a也跟着改变
+
+而c和d分别指向同一个复合值的两个不同引用。注意，这里的c和d仅仅是指向值[1,2,3]，并非持有，所以d改变c也跟着改变
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/val2.png)
+
+和上一个类似，我们像函数传递a时，实际上是将引用a的一个复本赋值给x，而a仍指向[1,2,3],我们可以通过引用x来更改数组的值（push(4)之后变为[1,2,3,4]），但x = [4,5,6]并不影响a的指向，所以a仍指向[1,2,3,4]
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/val3.png)
+
+我们无法自行决定使用值复制还是引用复制，一切由值的类型来决定
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/val4.png)
+
+标量一旦创建，值就无法更改
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/val5.png)
+
+### chapter 3 原生函数
+
+JS中，常用的原生函数有： String()、Number()、Boolean()、Array()、Object()、Function()、RegExp()、Date()、Error()、Symbol()
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/fn1.png)
+
+注意，typeof在这里返回的是对象类型的子类型，即new String("abc")创建的是字符串"abc"的封装对象，而非基本类型值"abc"
+
+所有typeof返回值为"onject"的对象（如数组）都包含一个内部属性class，这个属性无法直接访问，一般通过object.prototype.toString...来查看，如
+
+Object.prototype.toString.call([1,2,3])             // [object Array]
+
+Object.prototype.toString.call(/regex-literal/i)    // [object RegExp]
+
+Object.prototype.toString.call(null)                // [object Null]
+
+Object.prototype.toString.call(undefined)           // [object undefined]
+
+#### 3.1 封装对象
+
+由于基本类型值没有.length和.toString这样的属性和方法，需要通过封装对象才能访问，此时JS会自动为基本类型值包装一个封装对象
+
+var a = "abc"
+
+a.length;           // 3
+a.toUpperCase();    // "ABC"
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/fn2.png)
+
+#### 3.2 拆封
+
+valueof()函数用来返回对象的原始值
+![Image text](https://github.com/cwzp990/notes/blob/master/images/fn3.png)
+
+#### 3.3 原生函数作为构造函数
+
+关于数组、对象、函数和正则，我们常常用字面量的形式来创建他们，实际上，使用字符串形式和构造函数形式是一样的，除非十分必要，应该避免使用构造函数来创建他们。
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/fn4.png)
+
+Array构造函数只带一个数字参数时，该参数会被作为数组的预设长度，而非数组里的一个元素。另外，数组没有预设长度这一概念，这样创建出来的是一个空数组，只不过它的length为1，毫无意义。
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/fn5.png)
+
+a.map()之所以执行失败，是因为数组中并不存在任何单元，所以map无从遍历。
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/fn6.png)
+
+永远不要创建和使用空单元数组！
+
+#### 3.4 原生原型
+
+原生构造函数都有自己的.prototype对象，如Array.prototype、String.prototype，这些对象包含其对应子类型所持有的行为特征
+
+例如，将字符串值封装为字符串对象之后，就能访问String.prototype中定义的方法
+
+String.prototype.indexOf()                      // 在字符串中找到指定子字符串的位置
+
+String.prototype.charAt()                       // 获得字符串指定位置上的字符
+
+String.prototype.subStr()/substring()/slice     // 获得字符串指定部分
+
+String.prototype.toUpperCase()/toLowerCase      // 将字符串转换为大写或小写
+
+String.prototype.trim()                         // 去掉字符串前后空格，返回新的字符串
+
+以上 方法不改变源字符串的值，而是返回一个新字符串
+
+借助原型代理，所有字符串都可以访问这些方法
+
+#### 3.5 将原型作为默认值
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/fn7.png)
+
+Function.prototype是一个空函数，RegExp.prototype是一个空的正则，而Array.prototype是一个空的数组
+
+### chapter 4 强制类型转换
+
+#### 4.1 值类型转换
+
+
+
