@@ -257,5 +257,59 @@ Function.prototype是一个空函数，RegExp.prototype是一个空的正则，�
 
 #### 4.1 值类型转换
 
+类型转换发生在静态语言的编译阶段，而强制类型转换则发生在动态类型语言的运行时。
 
+var a = 42;
+
+var b = a + '';                 // 隐式类型转换
+
+var c = String(a);              // 显式类型转换
+
+#### 4.2 抽象值操作
+
+1. ToString
+
+基本类型值字符串化规则为：null->'null', undefined->'undefined',true->'true',对普通对象来说，除非自定义，否则toString()返回内部属性class的值，如[object, object]
+
+如果对象有自己的toString()方法，则会调用该方法并使用其返回值，如数组的toString()方法：
+
+var a = [1,2,3];
+
+a.toString();       // '1,2,3'
+
+2. JSON字符串化
+
+JSON.stringify()在将JSON对象序列化为字符串时也用到了toString，JSON字符串化和toString()的效果基本相同，只不过序列化的结果总是字符串
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/transform1.png)
+
+所有安全的JSON值都可以使用JSON.stringify()字符串化，那么不安全的值为：undefined、function、symbol和包含循环引用（对象之间相互引用，形成一个无限循环），JSON.stringify()在遇到他们会自动忽略他们，在数组中，则会返回null
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/transform2.png)
+
+如果对象中定义了toJSON()方法，JSON字符串化时会首先调用该方法，然后用它的返回值来进行序列化
+
+如果要对含有非法JSON值的对象做字符串化，或者对象中的某些值无法被序列化时，就需要定义toJSON()方法来返回一个安全的JSON值
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/transform3.png)
+
+我们在a里面创建了一个循环引用，这时进行序列化操作时会报错
+
+也就是说，toJSON应该返回一个能够被字符串化的安全的JSON值，而不是返回一个JSON字符串
+
+JSON.stringify()传递一个可选参数replace，它可以是数组或者函数，用来指定对象序列化过程中，哪些属性应该被处理，哪些应该被排除。
+
+如果replace是一个数组，那么它必须是一个字符串数组，其中包含序列化要处理的对象的属性的名称：
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/transform4.png)
+
+如果replace是一个对象，它会对其本身调用一次，然后对对象中的每个属性各调用一次，每次传递两个参数，键和值，如果要忽略某个键就返回undefined，否则返回指定的值
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/transform5.png)
+
+这里k在第一次调用是undefined（对对象本身调用这次），if语句将属性'c'排除掉，由于字符串化是递归的，因此数组[1,2,3]中的每个元素都会通过v传给replace，即1，2，3，参数k是他们的索引值，即0，1，2
+
+JSON.stringify()还有一个可选参数space，用来指定输出缩进格式
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/transform6.png)
 
