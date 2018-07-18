@@ -313,3 +313,68 @@ JSON.stringify()还有一个可选参数space，用来指定输出缩进格式
 
 ![Image text](https://github.com/cwzp990/notes/blob/master/images/transform6.png)
 
+3. ToNumber
+
+有时我们需要将非数字值当作数字来使用，比如数学运算。其中true->1, false->0, undefined->NaN, null->0
+
+对象包括数组会首先被转换为相应的基本类型值，如果返回的是非数字的基本类型值，则再遵循以上规则将其强制转换为数字
+
+它会首先检查该值有无valueOf()方法，有 并且返回基本类型的值，就使用该值进行强制类型转换，如果没有就使用ToString()的返回值来进行强制类型转换,如果这两个方法均不返回基本类型值，则抛出TypeError错误
+
+4. ToBoolean
+
+JS中的值可以分为以下两类：
+
+1.可以强制类型转换为false的值；2.其他（强制类型转换为true的值）
+
+以下是第一种强制转换为false的情况
+
+undefined null false 0 -0和NaN ''
+
+假值列表以外的值都是真值
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/transform7.png)
+
+虽然在JS代码中会出现假值对象，但它实际上并不属于JS语言的范畴
+
+浏览器在某些特定环境下，在常规JS语法基础上自己创建了一些外来值，这些就是“假值对象”。假值对象和普通对象并无二致，但将他们强制类型转换为布尔值为false
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/transform8.png)
+
+我们会发现，上面的值均为true，也就是说，除了假值列表里的，其余的均为true
+
+#### 4.3 显式强制类型转换
+
+1. 字符串和数字之间的转换
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/transform9.png)
+
+2. 奇特的~运算符
+
+字符运算符只适用于32位整数，运算符会强制操作数使用32位格式。这是通过抽象操作ToInt32来实现的。
+
+ToInt32首先执行ToNumber强制类型转换，然后再执行ToInt32
+
+~它首先将值强制类型转换位32位数字，然后执行字位操作符“非”（对每一个字位进行反转）
+
+~42 // -(42+1) = -43
+
+我们可以这么理解。那么，这又有什么关系呢？-1在代码中代表一个哨位值，比如在indexOf()方法中，如果找到就返回字符串所在的位置(从0开始)，否则返回-1，表示不存在。如果直接这样写，会在代码中暴露了底层的实际细节。我们可以这样写
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/transform10.png)
+
+3. 字位截除
+
+它的效果和Math.floor()相似，但也有不同
+
+~~中的第一个~执行ToInt32并反转字位，然后第二个~再进行一次字位反转，即将所有字位反转回原值，最后得到的仍然是ToInt32的结果
+
+注：~~只适用于32位数字，它对负数的处理与Math.floor()不同
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/transform11.png)
+
+#### 4.4 显式解析数字字符串
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/transform12.png)
+
+parseInt针对的是字符串值，true、function(){}和[1,2,3]是没作用的
