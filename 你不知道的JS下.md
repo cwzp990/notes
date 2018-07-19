@@ -687,3 +687,178 @@ ajax('http://xxxxx2', bar);
 ```
 
 上述例子中，无论foo()和bar哪一个先被触发，总会是baz()过早运行（a或者b仍处于未定义状态），但对baz()的第二次调用就没有问题，因为这时候a和b都已经可用了。
+
+3. 协作
+
+这里的重点不再是通过共享作用域中的值进行交互，这里的目标是取到一个长期运行的“进程”，并将其分割成多个步骤或多批任务，使得其他并发“进程”有机会将自己的运算插入到事件循环队列中交替运行
+
+```
+
+var res = [];
+
+// 从ajax调用中取得结果数组
+function response(data) {
+    // 添加到已有的res数组
+
+    // 添加标志
+    var trunk = data.splice(0, 1000);
+
+    res = res.concat(
+        data.map(fynction(val){
+            // 创建一个新的变换数组把所有data值加倍
+            return val * 2;
+        })
+    )
+
+    // 还有剩下的需要处理么？
+    if (data.length > 0) {
+        // 异步调度下一次批处理
+        setTimeout(function(){
+            response(data)
+        }, 0)
+    }
+}
+
+ajax('http://xxxxxx1', response)
+ajax('http://xxxxxx2', response)
+
+```
+
+这样的“进程”运行时，页面上的其他代码都不能运行，包括不能有其他的response()调用或UI刷新，甚至是滚动、输入、按钮点击这样的用户事件
+
+我们把数据集合放在最多包含1000条项目的块中，这样，我们就确保了进程运行的时间很短，即视，这意味着需要更多的后续进程，因为事件循环队列交替运行会提高站点/app的响应（性能）
+
+这里需要注意，我们没有协调这些进程的顺序，所以结果的顺序是不可预测的
+
+这里使用setTimeout进行异步调度，基本上它的意思是“把这个函数插入到当前事件循环队列的结尾处”
+
+#### 4. 任务
+
+任务队列是挂在事件循环队列的每个tick之后的一个队列。在事件循环的每个tick中，可能出现的异步动作不会导致一个完整的新事件添加到事件循环队列中，而会在当前tick的任务队列末尾添加一个项目（一个任务），好像在说“这里还有一件事将来要做，但要确保在其他任何事情发生之前就完成它”
+
+事件循环队列类似一个游乐园游戏，玩过了一个项目之后，需要重新排队才能再玩一次，而任务队列可以插队继续玩
+
+一个任务可能引起更多的任务被添加到同一个队列的末尾，所以从理论上来说，任务循环可能无限循环（一个任务总是添加到另一个任务，以此类推），进而导致程序的饿死，无法转移到下一个事件循环tick
+
+```
+
+console.log(a)
+
+setTimeout(function(){
+    console.log(b)
+}, 0)
+
+schedule(function(){
+    console.log(c)
+    schedule(function(){
+        console.log(d)
+    })
+})
+
+```
+
+打印顺序应该是acdb
+
+#### 5. 语句顺序
+
+代码中语句的顺序和JS引擎执行语句的顺序并不一定一致
+
+### chapter 7 回调
+
+#### 1. continuation
+
+// A
+ajax('...', function(){
+    // C
+})
+// B
+
+// A
+setTimeout(function(){
+    // C
+}, 1000)
+// B
+
+回调函数难以理解是因为我们的思考方式是一步一步的，但是从同步转换到异步之后，回调函数并不是按照一步一步的方式来表达的
+
+嵌套回调与链式回调
+
+listen("click", function handle(evt){
+    setTimeout(function request(){
+        ajax('http://xxxxx', function response(text){
+            if (text === 'hello') {
+                handle()
+            } else if (text === 'world') {
+                request()
+            }
+        })
+    }, 500)
+})
+
+在我们引入第三方不受信任的库时，用到了它的回调函数，我们需要进行很多不必要的逻辑来避免回调带来的风险
+
+省点回调
+
+```
+
+function success(data) {
+    console.log(data)
+}
+
+function failure(err) {
+    console.log(err)
+}
+
+ajax('http://xxxxx', success, failure)
+
+```
+
+es6中的promise就是使用的这种分离回调设计
+
+```
+
+function response(err, data) {
+    if (err) {
+        console.log(err)
+    } else {
+        console.log(data)
+    }
+}
+
+ajax('http://xxxxx', response)
+
+```
+
+这段代码打印出0（同步回调调用）还是1（异步回调调用）呢？这要是情况而定
+
+如果你不确定关注的api会不会永远异步执行怎么办呢，可以创建一个类似于这个“验证”版本的工具
+
+```
+
+function async(fn) {
+    var orig_fn = fn;
+    intv = setTimeout(function(){
+        intv = null;
+        if (fn) fn();
+    }, 0)
+}
+
+fn = null;
+
+return function() {
+    // 触发太快，在定时器intv触发指示异步转换发生之前
+    if (intv) {
+        fn = orig_fn.bind.apply(
+            orig_fn,
+            // 把封装器的this添加到bind()调用的参数中，以及克里化所有传入的参数
+            [this].cancat([].slice.call(arguments))
+        )
+    } else {
+        // 调用原来的函数
+        orig_fn.apply(this, arguments)
+    }
+}
+
+```
+
+### chapter 8 Promise
