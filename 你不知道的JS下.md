@@ -378,3 +378,312 @@ ToInt32首先执行ToNumber强制类型转换，然后再执行ToInt32
 ![Image text](https://github.com/cwzp990/notes/blob/master/images/transform12.png)
 
 parseInt针对的是字符串值，true、function(){}和[1,2,3]是没作用的
+
+es5之前，parseInt()有一个坑，如果没有第二个参数来指定转换的基数，parseInt会根据字符串的第一个来自行决定基数，如果第一个是x/X，则转换为16进制，如果第一个字符是0，则转换为8进制。es5之后默认为10进制。
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/transform13.png)
+
+上述代码实际上是parseInt("Infinity", 19)...第二个字符是n，和"42px"一样，n以后的被忽略了。在JS中，基数的有效值是0~9，a~i，i以19为基数时，值为18
+
+#### 4.5 显式转换为布尔值
+
+我们之前提到，使用Boolean会显式地将值强制转换为布尔值，!!也一样。
+
+### 4.6 隐式强制类型转换
+
+1. 隐式的简化
+
+字符串和数字之间的隐式强制类型转换
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/transform14.png)
+
+某一个或两个都是字符串，则执行的是字符串拼接的操作。然而：
+
+
+因为数组的valueOf()操作无法得到简单类型的值，于是它转而调用toString(),因此上式实际上是'1,2' + '3,4' = '1,23,4'
+
+所有，我们经常会看到这种用法 数字 + '' ---> 字符串
+
+一般情况下，a + '' 和 String(a)效果类似，但是
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/transform16.png)
+
+从这里我们可以发现，前者先调用valueOf方法再调用toString方法，而后者直接调用toString方法
+
+字符串转换为数字：
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/transform17.png)
+
+对象的 - 操作和 + 类似
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/transform18.png)
+
+2. || 和 && 
+
+这两个运算返回的不是布尔值，而是这两个操作符中的一个，即两个操作数中的一个，然后返回它的值
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/transform19.png)
+
+|| 和 && 会对第一个操作数（a和c）进行条件判断，如果不是布尔值，就先进行强制类型转换。再继续下面的逻辑：
+
+对于 || 来说，如果第一个为true，就返回第一个操作数的值，如果为false，就返回第二个操作数的值，&&相反
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/transform20.png)
+
+只有第一个值为真，第二个函数才会调用，否则会“短路”~
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/transform21.png)
+
+这里if条件里返回的是"foo"，但是if语句自带强制类型转换，所有返回了true
+
+### 4.7 == 和 ===
+
+前者允许在相等比较中进行强制类型转换，而===不允许
+
+1. 如果两个值类型相等，就仅比较它们是否相等，如42等于42，"abc"等于"abc"
+
+注意 NaN不等于NaN，+0不等于-0
+
+2. 对象的宽松相等 ==
+两个对象指向同一个值时，即视为相等，不发生强制类型转换
+
+3. == 在比较两个不同类型的值时，会发生隐式类型转换，将其中之一或者两者都转换为相同类型后在做比较
+
+字符串和数字的比较
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/equal1.png)
+
+如果x是数字，y是字符串，返回 x == ToNumber(y)
+如果x是字符串，y是数字，返回 ToNumber(x) == y
+即转换成数字在比较
+
+其他类型和布尔类型比较
+![Image text](https://github.com/cwzp990/notes/blob/master/images/equal2.png)
+如果x是布尔值，则返回ToNumebr(x) == y
+如果y是布尔值，则返回x == ToNumber(y)
+即布尔值换成数字在比较
+永远不要这样比较，没有意义！！！
+
+null和undefined之间的比较
+![Image text](https://github.com/cwzp990/notes/blob/master/images/equal3.png)
+如果x为null，y为undefined，则结果为true
+如果x为undefined，y为null，则结果为true
+也就是说，在==中，null和undefined是一回事，可以相互进行隐式强制类型转换
+
+对象和非对象之间的比
+![Image text](https://github.com/cwzp990/notes/blob/master/images/equal4.png)
+如果x是字符串或数字，y是对象，则返回 x == ToPrimitive(y)的结果
+如果x是对象，x是字符串或数字，则返回 ToPrimitive(x) == y的结果
+
+总结：如果两边的值有true或者false，千万不要用 ==
+如果两边的值有[]、''、0，尽量不要用 ==
+
+### 4.8 抽象关系比较
+![Image text](https://github.com/cwzp990/notes/blob/master/images/equal4.png)
+
+### chapter 6 异步
+
+#### 1. 分块的程序
+
+```
+
+var data = Ajax('http://xxxxxxx')
+console.log(data)
+
+```
+我们发现这里的ajax通常不会包含ajax结果
+
+标准的ajax请求不是同步完成的，这意味着ajax还没有返回任何值可以赋给变量data，如果data能够阻塞到响应返回，那么data = ..赋值就会正确工作
+
+以前，我们通过回调来获得data，如：
+
+```
+
+ajax('http://xxxxxx',function cb(data){
+
+    console.log(data)
+
+})
+
+```
+
+![Image text](https://github.com/cwzp990/notes/blob/master/images/async1.png)
+
+#### 2. 事件循环
+
+直到es6，JS才真正内建有直接的异步概念
+
+JS引擎只是在需要的时候，在给定的任意时刻执行程序中的单个代码块
+
+JS引擎并不是独立运行的，它运行在宿主环境中，如web浏览器、node，所有这些环境都有一个共同点，即它们都提供了一种机制来处理程序中多个块的执行，且执行每块时调用JS引擎，这种机制就叫事件循环
+
+也就是说，JS并没有时间的概念，只是一个按需执行JS任意代码片段的环境，事件（JS代码的执行）调度总是由包含它的环境进行
+
+```
+// JS实际上在这里通知了宿主环境，我现在已暂停执行，你一旦拿到了数据，就调用这个函数
+// 浏览器就会设置侦听来自网络的响应，拿到要给你的数据之后，就会把回调函数插入到事件循环，以此实现对这个回调的调度执行
+ajax('http://xxxxxx',function cb(data){
+
+    console.log(data)
+
+})
+
+```
+
+```
+
+// eventloop是一个用作队列的数组
+// 先进先出
+var eventloop = []
+var event
+
+// 永远执行
+while(true) {
+
+    if (eventloop.length > 0) {
+        // 拿到队列中的下一个事件
+        event = eventloop.shift()
+        //执行
+        try{
+            event()
+        }
+        catch(err) {
+            reportError(err)
+        }
+    }
+
+}
+
+```
+
+setTimeout并没有把你的回调函数挂在事件循环队列中，他所做的是设定一个定时器，当定时器到时后，环境会把你的回调函数放在事件循环中，这样，在未来某个时刻的tick会摘下并执行这个回调
+
+程序通常会被分成了很多小块，在事件循环队列中一个接一个地执行，和你不相关的其他事件也可能会插入到队列中
+
+#### 3. 并行线程
+
+异步是关于现在和将来的时间间隙，而并行是关于能够同时发生的事情
+
+```
+
+var a = 20;
+
+function foo() {
+    a = a + 1;
+}
+
+function bar() {
+    a = a * 2;
+}
+
+ajax('http://xxxxx', foo)
+ajax('http://xxxxx', bar)
+
+```
+
+根据JS单线程运行特性，foo在前，结果为42，bar在前，结果为41
+
+线程和进程的概念：
+https://www.cnblogs.com/dreamroute/p/5207813.html
+
+https://www.zhihu.com/question/25532384
+
+#### 3. 完整运行
+
+由于JS单线程的特性，foo()中的代码具有原子性，也就是说，一旦foo()开始运行，它的所有代码都会在bar()中的任意代码运行之前完成，或者相反，这就是完美运行特性
+
+即上述代码只有两种情况，这取决于这两个函数哪个先运行，如果存在多线程，且foo()、bar()中的语句可以交替运行的话，可能输出的数目会增加不少
+
+假设我们这里有三段代码，块1是同步的（现在运行），块2和块3是异步的（将来运行），那么块2和块3哪个先运行都是有可能的，同一段代码有两种结果意味着存在不确定性。但是这种不确定性是在函数（事件）顺序级别上，而不是多线程情况下的语句顺序级别。
+
+在JS的特性中，这种函数顺序的不确定性就是通常所说的竞态条件，foo()和bar()相互竞争，看谁先运行
+
+#### 4. 并发
+
+我们以下拉刷新功能举例
+
+第一个进程在用户向下滚动页面触发onscroll事件响应这些事件（发起ajax请求要求新的内容），第二个进程接受ajax响应（把内容展示到页面）
+
+显然，如果用户操作够快的话，在等待第一个响应返回并处理的时候可能看到两个或多个onscroll事件被触发，因此将得到快速触发彼此交替的onscroll事件和ajax响应事件
+
+理想情况：
+![Image text](https://github.com/cwzp990/notes/blob/master/images/async2.png)
+
+实际情况：
+![Image text](https://github.com/cwzp990/notes/blob/master/images/async3.png)
+
+1. 非交互
+
+```
+
+var res = {}
+
+function  foo(results) {
+    res.foo = results;
+}
+
+function bar(results) {
+    res.bar = results;
+}
+
+ajax('http://xxxxx', foo)
+ajax('http://xxxxx', bar)
+
+```
+
+foo和bar是两个并发执行的进程，按照什么顺序执行是不确定的，但是我们构建程序的方式使得无论按哪种顺序执行都无所谓。因为它们是独立运行的，不会互相影响
+
+2. 交互
+
+并发的进程需要相互交流，通过作用域或DOM间接交互
+
+```
+
+var res = [];
+
+function response() {
+    res.push(data)
+}
+
+// 我们需要加入判断来避免竞态条件引起的不确定性
+// 这个场景推出的方法也可以应用于多个并发函数调用通过共享DOM彼此之间交互的情况
+function response(data) {
+    if (data.url === 'http://1') {
+        res[0] = data
+    } else (data.url === 'http://2') {
+        res[1] = data
+    }
+}
+
+ajax('http://xxxxx', response)--->res[0]存放结果
+ajax('http://xxxxx', response)--->res[1]存放结果
+
+```
+
+有时候得到的结果可能和预期的相反，这要视哪个调用先完成决定
+
+```
+
+var a,b
+
+function foo(x) {
+    a = x * 2;
+    baz();
+}
+
+function bar(y) {
+    b = y * 2;
+    // if (a && b) {baz()}
+    baz();
+}
+
+function baz() {
+    console.log(a + b);
+}
+
+ajax('http://xxxxx1', foo);
+ajax('http://xxxxx2', bar);
+
+```
+
+上述例子中，无论foo()和bar哪一个先被触发，总会是baz()过早运行（a或者b仍处于未定义状态），但对baz()的第二次调用就没有问题，因为这时候a和b都已经可用了。
