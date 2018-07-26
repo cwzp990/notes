@@ -1,4 +1,4 @@
-# notes
+  # notes
 这里是我最近阅读的关于JS经典书籍的笔记，有一些是别人的理解，拿到一起，方便阅读，如有侵权，请告知我，我立即删除！
 
 ## 1. 你不知道的JavaScript 中卷
@@ -862,3 +862,191 @@ return function() {
 ```
 
 ### chapter 8 Promise
+
+1.未来值
+
+之前我们用回调的方法来封装程序中的continuation，然后把回调交给第三方，意思是这是将来要做的事情，要在当前的步骤完成之后发生。但是，如果我们不把自己程序的continuation传给第三方，而是希望第三方给我们解决了解其任务何时结束的能力，然后由我们自己的代码来决定下一步做什么，这就是promise
+
+举个例子
+
+```
+
+var x, y = 2;
+
+console.log(x + y); // NaN, 因为x还没有准备好
+
+```
+
+将x + y，如果他们当中的任何一个还没有准备好，就等待两者都加载好，一旦可以就立刻执行+运算，用程序来表达
+
+```
+
+function add(getX, getY, cb) {
+
+    var x, y;
+    getX(function(){
+        x = xVal;
+        // 两个都准备好了？
+        if (y != undefined) {
+            cb(x + y)
+        }
+    });
+    getY(function(){
+        y = yVal;
+        // 两个都准备好了？
+        if (x != undefined) {
+            cb (x + y)
+        }
+    })
+
+}
+
+add(fetchX, fetchY, function(sum) {
+    console.log(sum)
+})
+
+```
+
+Promise方法
+
+```
+
+function add(xPromise, yPromise) {
+
+    return Promise.all([xPromise, yPromise]).then(function(values){
+        return values[0] + values[1]
+    })
+
+}
+
+add(fetchX(), fetchY()).then(function(sum) {
+
+    console.log(sum);
+
+})
+
+```
+
+promise一旦决议，就是外部不可变的值，我们可以安全的把这个值传递给第三方，并确信它不会被更改
+
+2. 完成事件
+
+假设要调用一个函数foo()执行某个任务，我们不知道也不关心它的任何细节。这个函数可能立即完成任务，也可能需要一段时间才能完成
+
+我们只需知道foo()什么时候结束，这样就可以进行下一个任务。换句话说，我们想要通过某种方式在foo()完成的时候得到通知，以便可以继续下一步
+
+3.具有then方法的鸭子类型
+
+在promise领域，如何判断某个值是不是真的promise？promise是通过new promise()语法创建的，识别是通过then()函数的一个对象或函数来完成。
+
+```
+
+Object.prototype.then = function(){}
+Array.prototype.then = function(){}
+
+```
+
+如果你像上述代码那样，给原生原型添加then(),promise也会获取到该值
+
+#### 回调函数带来的困扰
+
+1). 调用回调过早
+2). 调用回调过晚（或不被调用）
+3). 调用回调次数过少或过多
+4). 未能传递所需的环境或参数
+5). 吞掉可能出现的错误或异常
+
+我们来一个个解决这些问题
+
+1. 调用回调过早
+
+对一个promise调用then的时候，即使这个promise已经决议，提供给then()的回调也总是会被异步调用，不再需要插入自己的setTimeout，promise会自动防止其出现
+
+2. 调用回调过晚（或不被调用）
+
+promise创建对象调用resolve()或reject()时，这个promise的then()注册的观察回调就会被自动调度。一个promise决议后，这个promise上所有的通过then()注册的回调都会在下一个异步时机点上依次被立即调用，这些回调中的任意一个都无法影响或延误对其他回调的调用
+
+```
+
+p.then(function(){
+    p.then(function(){
+        console.log('c')
+    })
+    console.log('a')
+})
+
+p.then(function(){
+    console.log('b')
+})
+
+// abc
+
+```
+
+c无法打断或抢占b，这是因为promise的运作方式
+
+在这两个独立的promise上链接的回调的相对顺序可能无法可靠的预测
+
+如果两个promise p1和p2都已经决议，那么p1.then()，p2.then()应该最终会先调用p1的回调，然后是p2的那些，但有时不是这样的
+
+```
+
+var p3 = new Promise(function(resolve, reject){
+    resolve('b');
+})
+
+var p1 = new Promise(function(resolve, reject){
+    resolve(p3)
+})
+
+var p2 = new Promise(function(resolve, reject){
+    resolve('a')
+})
+
+p1.then(function(v){
+    console.log(v)
+})
+
+p2.then(function(v){
+    console.log(v)
+})
+
+// a b
+
+```
+
+此时 p1的回调排在p2之后
+
+3. 回调未调用
+
+没有任何东西能阻止promise向你通知它的决议(如果它决议了的话)，如果你对一个注册了一个完成回调和一个拒绝回调，那么promise在决议时总是会调用其中的一个
+
+```
+
+function timeoutPromise(delay) {
+
+    return new Promise(function(resolve,reject){
+        setTimeout(function(){
+            reject('timeout')
+        }, delay)
+    })
+
+}
+
+Promise.rece([
+    foo(),                  // 试着开始foo()
+    timeoutPromise(3000)    // 给它3秒钟
+])
+.then(
+    function(){
+        // foo() 及时完成
+    },
+    function(err){
+        // 或者foo()被拒绝，或者只是没能按时完成
+        // 查看err来了解是哪种情况
+    }
+)
+
+```
+
+4. 调用次数过少或过多
