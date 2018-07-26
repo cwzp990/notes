@@ -1059,3 +1059,95 @@ Promise.rece([
 ```
 
 4. 调用次数过少或过多
+
+根据定义，回调被调用的正确次数应该是1次，一个promise在被创建之后，它只会响应第一次的决议，对于后面的resolve/reject将被忽略。如果你把同一个回调注册了不止一次(如p.then(f);p.then(f))，那它被调用的次数就会和注册次数相同。
+
+5. 未能传递参数/环境值
+
+promise至多只能有一个决议值(完成或者拒绝)
+
+6. 吞掉错误/异常
+
+如果拒绝一个promise并给出一个理由(也就是一个出错信息)，这个值就会被传给拒绝回调
+
+```
+
+var p = new Promise(function(resolve, reject){
+    foo.bar();          // foo未定义
+    resolve(23);        // 永远不会执行
+})
+
+p.then(
+    function fulfilled(msg){
+        // 永远不会到达这里
+        foo.bar()
+        console.log(msg)
+    },
+    function rejected(err){
+        // err将会是一个TypeError异常对象来自foo.bar()这一行
+    }
+)
+
+```
+
+而如果异常出现在p.then()中,如foo.bar()，乍看好像这个异常被吞掉了，实际上不是，而是我们没有侦听到它，p.then()调用本身返回了另一个promise，正式这个promise将会因TypeError异常而被拒绝。
+
+7. 是可信任的promise么
+
+promise并没有完全摆脱回调，而是改变了传递回调的位置，我们并不是把回调传给foo()，而是从foo()得到某个东西(promise)，然后把这个回调传给了它
+
+如果像promise.resolve()传递一个非promise，then就会得到一个用该值填充的promise，下面两种情况结果是相同的
+
+```
+
+var p1 = new Promise(function(resolve, reject){
+    resolve(23);
+})
+
+var p2 = Promise.resolve(23)
+
+```
+
+而如果像promise.resolve()传递一个真正的promise，就只会返回同一个promise
+
+```
+
+var p1 = Promise.resolve(23)
+
+var p2 = Promise.resolve(p1)
+
+p1 === p2 // true
+
+```
+
+如果像promise.resolve()传递了一个非promise的then值，前者就会试图展开这个值，而且展开过程会持续到提取一个具体的非类promise的最终值。
+
+```
+
+Promise.resolve(p).then(
+    function fulfilled(val) {
+        console.log(val)
+    },
+    function rejected(err) {
+        // 永远不会到达这里
+    }
+)
+
+```
+
+promise.resolve()可以接受任何.then()，将其解封为它的非.then()值，从promise.resolve()得到的是一个真正的promise，是一个可信任的值。
+
+```
+
+// 不要这么做
+foo(42).then(function(v){
+    console.log(v)
+});
+
+// 而要这么做
+promise.resolve(foo(42))
+    .then(function(v){
+        console.log(v)
+    })
+
+```
