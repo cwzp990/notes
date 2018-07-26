@@ -458,20 +458,26 @@ es5之前，parseInt()有一个坑，如果没有第二个参数来指定转换�
 即转换成数字在比较
 
 其他类型和布尔类型比较
+
 ![Image text](https://github.com/cwzp990/notes/blob/master/images/equal2.png)
+
 如果x是布尔值，则返回ToNumebr(x) == y
 如果y是布尔值，则返回x == ToNumber(y)
 即布尔值换成数字在比较
 永远不要这样比较，没有意义！！！
 
 null和undefined之间的比较
+
 ![Image text](https://github.com/cwzp990/notes/blob/master/images/equal3.png)
+
 如果x为null，y为undefined，则结果为true
 如果x为undefined，y为null，则结果为true
 也就是说，在==中，null和undefined是一回事，可以相互进行隐式强制类型转换
 
 对象和非对象之间的比
+
 ![Image text](https://github.com/cwzp990/notes/blob/master/images/equal4.png)
+
 如果x是字符串或数字，y是对象，则返回 x == ToPrimitive(y)的结果
 如果x是对象，x是字符串或数字，则返回 ToPrimitive(x) == y的结果
 
@@ -479,6 +485,7 @@ null和undefined之间的比较
 如果两边的值有[]、''、0，尽量不要用 ==
 
 ### 4.8 抽象关系比较
+
 ![Image text](https://github.com/cwzp990/notes/blob/master/images/equal4.png)
 
 ### chapter 6 异步
@@ -607,9 +614,11 @@ https://www.zhihu.com/question/25532384
 显然，如果用户操作够快的话，在等待第一个响应返回并处理的时候可能看到两个或多个onscroll事件被触发，因此将得到快速触发彼此交替的onscroll事件和ajax响应事件
 
 理想情况：
+
 ![Image text](https://github.com/cwzp990/notes/blob/master/images/async2.png)
 
 实际情况：
+
 ![Image text](https://github.com/cwzp990/notes/blob/master/images/async3.png)
 
 1. 非交互
