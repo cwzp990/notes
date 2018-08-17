@@ -9,26 +9,22 @@
 
 我们先来看一段代码
 
-```
+```js
 
 var dark = {
-
 	duckSinging:function(){
 		console.log('嘎嘎嘎')
 	}
 }
 
 var chicken = {
-
 	duckSinging:function(){
 		console.log('嘎嘎嘎')
 	}
 }
 
 var choir = [];    // 合唱团
-
 var joinChoir=function(){
-
 	if (animal && typeof animal.duckSinging==='function'){
 		choir.push(animal);
 		console.log('恭喜加入合唱团')
@@ -36,7 +32,6 @@ var joinChoir=function(){
 }
 
 joinChoir(duck);		// 恭喜加入合唱团
-
 joinChoir(chicken);		// 恭喜加入合唱团
 
 ```
@@ -49,10 +44,9 @@ joinChoir(chicken);		// 恭喜加入合唱团
 
 我们来看一段代码：
 
-```
+```js
 
 var makeSound=function(animal){
-
 	if (animal instanceof Duck) {
 		console.log('嘎嘎嘎')
 	} else if (animal instanceof Chicken) {
@@ -74,41 +68,33 @@ makeSound(new Chicken());	// 咯咯咯
 
 下面是改动后的代码：
 
-```
+```js
 
 var makeSound=function(animal){
-	
 	animal.sond();
 };
 
 var Duck=function(){}
-
 Duck.prototype.sound=function(){
-	
 	console.log('嘎嘎嘎');
 }
 
 var Chicken=function(){}
-
 Chicken.prototype.sound=function(){
-
 	console.log('咯咯咯')
 }
 
 makeSound(new Duck());		// 嘎嘎嘎
-
 makeSound(new Chicken());	// 咯咯咯
 
 ```
 
 如果这时加入了一只狗，我们只需添加这段代码即可：
 
-```
+```js
 
 var Dog=function(){}
-
 Dog.prototype.sound=function(){
-
 	console.log('汪汪汪')
 }
 
@@ -122,24 +108,21 @@ makeSound(new Dog());		// 汪汪汪
 
 对象应该做什么不是临时决定的，而是事先约定好了的。每个对象应该做什么，已经成了该对象的一个方法，被安排在对象的内部，每个对象负责他们自己的行为。所以这些对象可以根据同一个消息，有条不紊的分别进行各自的操作。
 
-```
+```js
 
 var googleMap=function(){
-	
 	show:function(){
 		console.log('开始渲染谷歌地图')
 	}
 }
 
 var baiduMap=function(){
-	
 	show:function(){
 		console.log('开始渲染百度地图')
 	}
 }
 
 var renderMap=function(map){
-
 	if(map.show instanceof Function){
 		map.show()
 	}
@@ -156,10 +139,9 @@ render(baiduMap)
 
 JS并没有提供关键字来支持这个特性，我们只能依赖变量的作用域来实现封装特性，除了ES6中提供的let之外，一般我们通过函数来创建作用域。
 
-```
+```js
 
 var Object=(function(){
-
 	var _name='sven';			// 私有变量
 	return {
 		getName:function(){		// 公开方法
@@ -169,7 +151,6 @@ var Object=(function(){
 })()
 
 console.log(Object.getName())	// sven
-
 console.log(Object._name)		// undefined
 
 ```
@@ -196,29 +177,22 @@ console.log(Object._name)		// undefined
 
 举个栗子
 
-```
+```js
 
 var Plane=function(){
-
 	this.blood=100;
 	this.attacklevel=1;
 	this.defenselevel=1;
 }
 
 var plane=new Plane();
-
 plane.blood=500;
-
 plane.attacklevel=10;
-
 plane.defenselevel=7;
 
 var clonePlane=Object.create(plane);
-
 console.log(clonePlane.blood)		// 500
-
 console.log(clonePlane.attacklevel)	// 10
-
 console.log(clonePlane.defenselevel)// 7
 
 ```
@@ -237,20 +211,17 @@ JS在设计的时候，模仿JAVA引入了两套类型机制：基本类型和�
 
 要找到一个对象，不是通过实例化类，而是找到一个对象作为原型克隆它，如：
 
-```
+```js
 
 function Person(name){
-
 	this.name=name;
 }
 
 Person.prototype.getName=function(){
-	
 	return this.name;
 }
 
 var a=new Person('sven');
-
 console.log(a.name);			// sven
 console.log(a.getName());		// sven
 
@@ -268,18 +239,16 @@ JS给对象提供了一个名为_proto_的隐藏属性，某个对象的_proto_�
 
 实际上，JS的对象最初都是由Object.prototype对象克隆而来的，但对象构造器的原型不仅限于Object.prototype上，而是可以动态指向其他的对象。
 
-```
+```js
 
 var obj={
 	name: 'sven';
 }
 
 var A=function(){};
-
 A.propotype=obj;
 
 var a=new A();
-
 console.log(a.name)
 
 ```
@@ -296,12 +265,11 @@ call传入参数不固定，第一个参数指定this对象的指向，第二个
 
 1. 改变this指向
 
-```
+```js
 
 var obj1={
 	name: 'sven';
 }
-
 var obj2={
 	name: 'anne';
 }
@@ -309,7 +277,6 @@ var obj2={
 window.name='window';
 
 var getName=function(){
-
 	alert(this.name);
 }
 
@@ -321,10 +288,9 @@ getname.call(obj2)	// anne
 
 2. Function.prototype.bind
 
-```
+```js
 
 Function.prototype.bind=function(context){
-
 	var self=this;								// 保存原函数
 	var context=[].shift.call(arguments);		// 需要绑定的this上下文
 	var args=[].slice.call(arguments);			// 剩余参数转成数组
@@ -340,7 +306,6 @@ var obj={
 }
 
 var func=function(){
-	
 	alert(this.name);							// sven
 	alert([a,b,c,d,e]);							// [1,2,3,4]
 }.bind(obj,1,2)
@@ -351,27 +316,23 @@ func(3,4)
 
 3. 借用其他对象的方法
 
-```
+```js
 
 // 在构造函数中，实现继承
 
 var A=function(name){
-
 	this.name=name;
 }
 
 var B=function(){
-
 	A.apply(this,arguments);
 }
 
 B.prototype.getName=function(){
-	
 	return this.name;
 }
 
 var b=new B('sven');
-
 console.log(b.getName());		// sven
 
 ```
@@ -388,10 +349,9 @@ console.log(b.getName());		// sven
 
 ### 3.1 闭包和面向对象设计
 
-```
+```js
 
 var extent=function(){
-
 	var value=0;
 	return {
 		call: function(){
@@ -402,17 +362,13 @@ var extent=function(){
 }
 
 var extent=extent();
-
 extent.call();			// 1
-
 extent.call();			// 2
-
 extent.call();			// 3
 
 // 面向对象的写法
 
 var extent={
-
 	value:0,
 	call:function(){
 		this.value++;
@@ -423,30 +379,26 @@ var extent={
 // 或者
 
 var Extent=function(){
-
 	this.value=0;
 }
 
 Extent.prototype.call=function(){
-
 	this.value++;
 	console.log(this.value);
 }
 
 var extent=new Extent();
-
 extent.call();
 
 ```
 
 ### 3.2 用闭包实现命令模式
 
-```
+```js
 
 // 面向对象的方式
 
 var Tv={
-
 	open: function(){
 		console.log('open tv');
 	},
@@ -456,22 +408,18 @@ var Tv={
 }
 
 var OpenTvCommand=function(receiver){
-
 	this.receiver=receiver;
 }
 
 OpenTvCommand.prototype.execute=function(){
-
 	this.receiver.open();			// 执行打开电视命令
 }
 
 CLoseTvCommand.prototype.excute=function(){
-
 	this.receiver.close();			// 执行关闭电视命令
 }
 
 var setCommand=function(command){
-
 	document.getElementById('execute').onclick=function(){
 		command.execute();			// 输出：open tv
 	}
@@ -487,12 +435,11 @@ setCommand(new OpenTvCommand(Tv));
 
 命令模式的意图是把请求封装为对象，从而分离请求的发起者和请求的接收者（执行者）之间的耦合关系。在命令被执行之前，可以预先往命令对象中植入命令的接收者。
 
-```
+```js
 
 // 闭包的方式
 
 var Tv={
-
 	open: function(){
 		console.log('open tv');
 	},
@@ -502,7 +449,6 @@ var Tv={
 }
 
 var createCommand=function(receiver){
-	
 	var excute=function(){
 		return receiver.open();		// 执行打开电视命令
 	}
@@ -518,7 +464,6 @@ var createCommand=function(receiver){
 }
 
 var setCommand=function(command){
-
 	document.getElementById('execute').onclick=function(){
 		command.execute();			// 输出：open tv
 	}
@@ -547,19 +492,15 @@ setCommand(createCommand(Tv));
 
 它接收一个函数当作参数，这个函数里面封装了数组元素的排序规则，从Array.prototype.sort的使用可以看到，我们的目的是对数组进行排序，这是不变的部分，而使用什么规则进行排序是可变的。因此，将可变的部分封装在函数参数里，动态传入Array.prototype.sort：
 
-```
+```js
 
 // 从小到大
-
 [1,4,3].sort(function(a,b){
-
 	return a-b;				// [1,3,4]
 })
 
 // 从大到小
-
 [1,4,3].sort(function(a,b){
-
 	return b-a;				// [4,3,1]
 })
 
@@ -567,12 +508,11 @@ setCommand(createCommand(Tv));
 
 #### 3.3.2 函数作为返回值输出
 
-```
+```js
 
 // 判断数据类型
 
 var isType=function(type){
-
 	return function(obj){
 		return Object.prototype.toString.call(obj)==='[Object'+ type +']';
 	}
@@ -581,14 +521,10 @@ var isType=function(type){
 // 单例模式
 
 var getSingle=function(fn){
-
 	var ret;
-
 	return function(){
 		return ret || (ret=fn.apply(this, arguments));
-		
 	}
-
 }
 
 ```
@@ -597,10 +533,9 @@ var getSingle=function(fn){
 
 AOP(面向切面编程)的主要作用是把一些跟核心业务逻辑模块无关的功能抽离出来，这些跟业务逻辑无关的功能通常包括日志统计、安全控制、异常处理等。把这些功能抽离出来之后，再通过“动态植入”的方式掺入业务逻辑模块中。通常，在JS中实现AOP，都是指把一个函数“动态植入”到另一个函数之中，具体实现的技术有很多，本书我们通过扩展Function.prototype来做到这一点。
 
-```
+```js
 
 Function.prototype.before=function(beforefn){
-	
 	ver _self=this;
 	return function(){
 		beforefn.apply(this, arguments);
@@ -609,7 +544,6 @@ Function.prototype.before=function(beforefn){
 }
 
 Function.prototype.after=function(afterfn){
-	
 	var _self=this;
 	return function(){
 		var ret=_self.apply(this, arguments);
@@ -623,7 +557,6 @@ var func=fuction(){
 }
 
 func=func.before(function(){
-	
 	console.log(1);
 }).after(function(){
 	console.log(3);
@@ -639,14 +572,11 @@ func();
 
 首先我们讨论的是函数柯里化。currying又称部分求值。一个currying的函数首先会接受一些参数，接受的这些参数以后，该函数并不会立即求值，而是继续返回另一个函数，刚才传入的参数在函数形成的闭包中被保存起来。待到函数被真正需要求值的时候，之前传入的所有参数都会被一次性用于求值。
 
-```
+```js
 
 // 计算月开销函数
-
 var monthlyCost=0;
-
 var cost=function(money){
-	
 	monthlyCost+=money;
 }
 
@@ -655,12 +585,8 @@ cost(200);
 cost(300);
 
 // 输出60
-
-
 // currying
-
 var currying=function(fn){
-	
 	var args=[];
 	return function(){
 		if (arguments.length===0){
@@ -673,7 +599,6 @@ var currying=function(fn){
 }
 
 var cost=(function(){
-	
 	var money=0;
 	return function(){
 		for (i=0,l=arguments.length;i<l;i++){
@@ -682,25 +607,19 @@ var cost=(function(){
 		return money;
 	}
 })();
-
 var cost=curry(cost);			// 转化成currying函数
-
 cost(100);						// 未真正求值
-
 cost(200);						// 未真正求值
-
 cost(300);						// 未真正求值
-
 alert(cost());					// 输出600 
 
 ```
 
 uncurrying
 
-```
+```js
 
 Function.prototype.uncurrying=function(){
-	
 	var self=this;			// 此时是Array.prototype.push
 	return function(){
 		var obj=Array.prototype.shift.call(arguments);
@@ -712,15 +631,12 @@ Function.prototype.uncurrying=function(){
 }
 
 var push=Array.prototype.push.uncurrying();
-
 var obj={
-
 	'length': 1,
 	'0': 1
 };
 
 push(obj, 2);
-
 console.log(obj);			// 输出 {0:1,1:2,length:2}
 
 ```
@@ -735,14 +651,12 @@ window.onresize事件
 
 函数节流的原理：上述场景导致的问题都是函数被触发的频率太高。我们可以利用setTimeout将即将被执行的函数延迟一段处理，如果这次延迟执行还没有完成，则忽略接下来调用该函数的请求。
 
-```
+```js
 
 var throttle=function(fn, interval){
-
 	var _self=fn,							// 保存需要被延迟执行的函数的引用
 		timer,								// 定时器
 		firstTime=true;						// 是否第一次调用
-
 	return function(){
 		var args=arguments,
 			_me=this;
@@ -771,10 +685,9 @@ window.onresize=throttle(function(){
 
 当我们在页面中渲染一个列表时，可能要一次性往页面中创建成百上千个节点，这种短时间内往页面中大量添加dom节点显然也会让浏览器吃不消，导致浏览器卡顿或假死。解决方法是，我们可以让创建节点的工作分批次进行，如把1s创建1000个节点分成每200ms创建8个节点。
 
-```
+```js
 
 var timeChunk=function(ary, fn, count){
-	
 	var obj, t;
 	var len=arr.length;
 	var start=function(){
@@ -794,16 +707,12 @@ var timeChunk=function(ary, fn, count){
 }
 
 // 分批次往页面中创建8个节点
-
 var ary=[];
-
 for(var i=1;i<=1000; i++){
-	
 	ary.push(i);
 }
 
 var renderFiendList=timerChunk(ary, function(n){
-	
 	var div=document.createElement('div');
 	div.innerHtml=n;
 	document.body.appendChild(div);
