@@ -612,24 +612,17 @@ obj.doCool(); // 'cool'
 
 首先我们定义一个Animal的对象，它包含所有任务都可以使用的具体行为。接着对于每一个任务，你都会定义一个对象来存储对应的数据和行为。他会把特定的任务对象都关联到Animal功能对象上，让它们在需要的时候可以进行委托。
 
-```
+```js
 
 Animal = {
-
     name: function(name) {
-
         this.name = name;
-
     }
-
 }
 
 cat = Object.create(Animal);
-
 cat.sayName = function(name, voice) {
-
     this.name(name);
-
     this.voice = 'miaomiao'
 
 }
@@ -638,36 +631,27 @@ cat.sayName = function(name, voice) {
 
 下面的代码在chrome和firefox上得出的结果并不相同：
 
-```
+```js
 
 function Foo() {}
-
 var a = new Foo();
-
 a;      // 在chrome上显示 Foo {}，在firefox上显示 Object {}
 
 ```
 
 原因：
 
-```
+```js
 
 var foo = {};
-
 var a = Object.create(foo);
-
 // chrome下：foo.prototype.constructor = function newFoo() {};
-
 a; // Object {}
 
 Object.definePorperty(foo, 'constructor', {
-
     enumerable: false,
-
     value: function newFoo() {}
-
 })
-
 a; // newFoo {}         <--- chrome使用了a.constructor.name进行跟踪
 
 ```

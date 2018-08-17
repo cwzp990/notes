@@ -93,7 +93,7 @@ JS的数字类型是基于IEEE754标准来实现的，该标准也称为“浮�
 
 es6中，可以用机器精度来比较两个数是否相等
 
-```
+```js
 
 function equal(n1, n2) {
     return Math.abs(n1 - n2) < Number.EPSILON;
@@ -492,7 +492,7 @@ null和undefined之间的比较
 
 #### 1. 分块的程序
 
-```
+```js
 
 var data = Ajax('http://xxxxxxx')
 console.log(data)
@@ -504,12 +504,10 @@ console.log(data)
 
 以前，我们通过回调来获得data，如：
 
-```
+```js
 
 ajax('http://xxxxxx',function cb(data){
-
     console.log(data)
-
 })
 
 ```
@@ -526,18 +524,17 @@ JS引擎并不是独立运行的，它运行在宿主环境中，如web浏览器
 
 也就是说，JS并没有时间的概念，只是一个按需执行JS任意代码片段的环境，事件（JS代码的执行）调度总是由包含它的环境进行
 
-```
+```js
+
 // JS实际上在这里通知了宿主环境，我现在已暂停执行，你一旦拿到了数据，就调用这个函数
 // 浏览器就会设置侦听来自网络的响应，拿到要给你的数据之后，就会把回调函数插入到事件循环，以此实现对这个回调的调度执行
 ajax('http://xxxxxx',function cb(data){
-
     console.log(data)
-
 })
 
 ```
 
-```
+```js
 
 // eventloop是一个用作队列的数组
 // 先进先出
@@ -546,7 +543,6 @@ var event
 
 // 永远执行
 while(true) {
-
     if (eventloop.length > 0) {
         // 拿到队列中的下一个事件
         event = eventloop.shift()
@@ -558,7 +554,6 @@ while(true) {
             reportError(err)
         }
     }
-
 }
 
 ```
@@ -571,18 +566,15 @@ setTimeout并没有把你的回调函数挂在事件循环队列中，他所做�
 
 异步是关于现在和将来的时间间隙，而并行是关于能够同时发生的事情
 
-```
+```js
 
 var a = 20;
-
 function foo() {
     a = a + 1;
 }
-
 function bar() {
     a = a * 2;
 }
-
 ajax('http://xxxxx', foo)
 ajax('http://xxxxx', bar)
 
@@ -623,18 +615,15 @@ https://www.zhihu.com/question/25532384
 
 1. 非交互
 
-```
+```js
 
 var res = {}
-
 function  foo(results) {
     res.foo = results;
 }
-
 function bar(results) {
     res.bar = results;
 }
-
 ajax('http://xxxxx', foo)
 ajax('http://xxxxx', bar)
 
@@ -646,14 +635,12 @@ foo和bar是两个并发执行的进程，按照什么顺序执行是不确定�
 
 并发的进程需要相互交流，通过作用域或DOM间接交互
 
-```
+```js
 
 var res = [];
-
 function response() {
     res.push(data)
 }
-
 // 我们需要加入判断来避免竞态条件引起的不确定性
 // 这个场景推出的方法也可以应用于多个并发函数调用通过共享DOM彼此之间交互的情况
 function response(data) {
@@ -663,7 +650,6 @@ function response(data) {
         res[1] = data
     }
 }
-
 ajax('http://xxxxx', response)--->res[0]存放结果
 ajax('http://xxxxx', response)--->res[1]存放结果
 
@@ -671,25 +657,21 @@ ajax('http://xxxxx', response)--->res[1]存放结果
 
 有时候得到的结果可能和预期的相反，这要视哪个调用先完成决定
 
-```
+```js
 
 var a,b
-
 function foo(x) {
     a = x * 2;
     baz();
 }
-
 function bar(y) {
     b = y * 2;
     // if (a && b) {baz()}
     baz();
 }
-
 function baz() {
     console.log(a + b);
 }
-
 ajax('http://xxxxx1', foo);
 ajax('http://xxxxx2', bar);
 
@@ -701,24 +683,20 @@ ajax('http://xxxxx2', bar);
 
 这里的重点不再是通过共享作用域中的值进行交互，这里的目标是取到一个长期运行的“进程”，并将其分割成多个步骤或多批任务，使得其他并发“进程”有机会将自己的运算插入到事件循环队列中交替运行
 
-```
+```js
 
 var res = [];
-
 // 从ajax调用中取得结果数组
 function response(data) {
     // 添加到已有的res数组
-
     // 添加标志
     var trunk = data.splice(0, 1000);
-
     res = res.concat(
         data.map(fynction(val){
             // 创建一个新的变换数组把所有data值加倍
             return val * 2;
         })
     )
-
     // 还有剩下的需要处理么？
     if (data.length > 0) {
         // 异步调度下一次批处理
@@ -749,14 +727,12 @@ ajax('http://xxxxxx2', response)
 
 一个任务可能引起更多的任务被添加到同一个队列的末尾，所以从理论上来说，任务循环可能无限循环（一个任务总是添加到另一个任务，以此类推），进而导致程序的饿死，无法转移到下一个事件循环tick
 
-```
+```js
 
 console.log(a)
-
 setTimeout(function(){
     console.log(b)
 }, 0)
-
 schedule(function(){
     console.log(c)
     schedule(function(){
@@ -808,23 +784,21 @@ listen("click", function handle(evt){
 
 省点回调
 
-```
+```js
 
 function success(data) {
     console.log(data)
 }
-
 function failure(err) {
     console.log(err)
 }
-
 ajax('http://xxxxx', success, failure)
 
 ```
 
 es6中的promise就是使用的这种分离回调设计
 
-```
+```js
 
 function response(err, data) {
     if (err) {
@@ -842,7 +816,7 @@ ajax('http://xxxxx', response)
 
 如果你不确定关注的api会不会永远异步执行怎么办呢，可以创建一个类似于这个“验证”版本的工具
 
-```
+```js
 
 function async(fn) {
     var orig_fn = fn;
@@ -851,9 +825,7 @@ function async(fn) {
         if (fn) fn();
     }, 0)
 }
-
 fn = null;
-
 return function() {
     // 触发太快，在定时器intv触发指示异步转换发生之前
     if (intv) {
@@ -878,20 +850,18 @@ return function() {
 
 举个例子
 
-```
+```js
 
 var x, y = 2;
-
 console.log(x + y); // NaN, 因为x还没有准备好
 
 ```
 
 将x + y，如果他们当中的任何一个还没有准备好，就等待两者都加载好，一旦可以就立刻执行+运算，用程序来表达
 
-```
+```js
 
 function add(getX, getY, cb) {
-
     var x, y;
     getX(function(){
         x = xVal;
@@ -918,10 +888,9 @@ add(fetchX, fetchY, function(sum) {
 
 Promise方法
 
-```
+```js
 
 function add(xPromise, yPromise) {
-
     return Promise.all([xPromise, yPromise]).then(function(values){
         return values[0] + values[1]
     })
@@ -929,9 +898,7 @@ function add(xPromise, yPromise) {
 }
 
 add(fetchX(), fetchY()).then(function(sum) {
-
     console.log(sum);
-
 })
 
 ```
@@ -948,7 +915,7 @@ promise一旦决议，就是外部不可变的值，我们可以安全的把这�
 
 在promise领域，如何判断某个值是不是真的promise？promise是通过new promise()语法创建的，识别是通过then()函数的一个对象或函数来完成。
 
-```
+```js
 
 Object.prototype.then = function(){}
 Array.prototype.then = function(){}
@@ -975,7 +942,7 @@ Array.prototype.then = function(){}
 
 promise创建对象调用resolve()或reject()时，这个promise的then()注册的观察回调就会被自动调度。一个promise决议后，这个promise上所有的通过then()注册的回调都会在下一个异步时机点上依次被立即调用，这些回调中的任意一个都无法影响或延误对其他回调的调用
 
-```
+```js
 
 p.then(function(){
     p.then(function(){
@@ -998,7 +965,7 @@ c无法打断或抢占b，这是因为promise的运作方式
 
 如果两个promise p1和p2都已经决议，那么p1.then()，p2.then()应该最终会先调用p1的回调，然后是p2的那些，但有时不是这样的
 
-```
+```js
 
 var p3 = new Promise(function(resolve, reject){
     resolve('b');
@@ -1030,10 +997,9 @@ p2.then(function(v){
 
 没有任何东西能阻止promise向你通知它的决议(如果它决议了的话)，如果你对一个注册了一个完成回调和一个拒绝回调，那么promise在决议时总是会调用其中的一个
 
-```
+```js
 
 function timeoutPromise(delay) {
-
     return new Promise(function(resolve,reject){
         setTimeout(function(){
             reject('timeout')
@@ -1070,7 +1036,7 @@ promise至多只能有一个决议值(完成或者拒绝)
 
 如果拒绝一个promise并给出一个理由(也就是一个出错信息)，这个值就会被传给拒绝回调
 
-```
+```js
 
 var p = new Promise(function(resolve, reject){
     foo.bar();          // foo未定义
@@ -1098,7 +1064,7 @@ promise并没有完全摆脱回调，而是改变了传递回调的位置，我�
 
 如果像promise.resolve()传递一个非promise，then就会得到一个用该值填充的promise，下面两种情况结果是相同的
 
-```
+```js
 
 var p1 = new Promise(function(resolve, reject){
     resolve(23);
@@ -1110,19 +1076,17 @@ var p2 = Promise.resolve(23)
 
 而如果像promise.resolve()传递一个真正的promise，就只会返回同一个promise
 
-```
+```js
 
 var p1 = Promise.resolve(23)
-
 var p2 = Promise.resolve(p1)
-
 p1 === p2 // true
 
 ```
 
 如果像promise.resolve()传递了一个非promise的then值，前者就会试图展开这个值，而且展开过程会持续到提取一个具体的非类promise的最终值。
 
-```
+```js
 
 Promise.resolve(p).then(
     function fulfilled(val) {
@@ -1137,7 +1101,7 @@ Promise.resolve(p).then(
 
 promise.resolve()可以接受任何.then()，将其解封为它的非.then()值，从promise.resolve()得到的是一个真正的promise，是一个可信任的值。
 
-```
+```js
 
 // 不要这么做
 foo(42).then(function(v){
