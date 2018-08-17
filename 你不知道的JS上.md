@@ -63,10 +63,9 @@ JS是解释执行语言，但事实上是一门编译语言。
 
 在这里，全局变量会自动成为全局对象（在浏览器环境下是window）的属性，因此，我们可以得出下面的结果：
 
-```
+```js
 
 a = 10;
-
 console.log(window.a === 10) // true
 
 ```
@@ -85,38 +84,27 @@ console.log(window.a === 10) // true
 
 例如：
 
-```
+```js
 
 var a = 2;
-
 function foo() {            <--- 添加这一行
-
     var a = 3;
-
     console.log(a); // 3
-
 }                           <--- 添加这一行
-
 foo();                      <--- 添加这一行
-
 console.log(a); // 2
 
 ```
 
 这样做会导致全局作用域里多了一个foo，我们还可以这样：
 
-```
+```js
 
 var a = 2;
-
 (function foo() {            <--- 添加这一行
-
     var a = 3;
-
     console.log(a); // 3
-
 })()                         <--- 添加这一行
-
 console.log(a); // 2
 
 ```
@@ -127,30 +115,23 @@ console.log(a); // 2
 
 通常，我们可以在回调函数中见到匿名函数，如：
 
-```
+```js
 
 setTimeout(function (){
-
     console.log('this is a function')
-
 }, 1000)
 
 ```
 
 #### 3.3 立即执行函数
 
-```
+```js
 
 var a = 2;
-
 (function foo(){
-
     var a = 3;
-
     console.log(a); // 3
-
 })()
-
 console.log(a); // 2
 
 ```
@@ -169,10 +150,9 @@ JavaScript看到 var a = 2 时，会将其看成两个部分，var a, a = 2，�
 
 函数声明和变量声明都会被提升，但是函数优先，然后才是变量
 
-```
+```js
 
 foo();                  // 若没有第三个，则会输出1，否则输出3
-
 function foo() {
     console.log(1);
 }
@@ -197,43 +177,35 @@ this是在调用时进行绑定的，而不是声明的时候，它的指向取�
 
 1.如果一个函数中有this，且没有被其他函数调用，则指向window，严格模式下为undefined
 
-```
+```js
 
 function foo() {
-
     console.log( this.a );
 }
 
 var a = 2;
-
 foo(); // 2
 
 function foo() {
-
     "use strict";
-
     console.log( this.a );
 }
 
 var a = 2;
-
 foo(); // TypeError: `this` is `undefined`
 
 ```
 
 2. 如果一个函数中有this，这个函数有被上一层函数调用，那么this指向上层函数
 
-```
+```js
 
 function foo() {
-
     console.log( this.a );
 }
 
 var obj = {
-
     a: 2,
-
     foo: foo
 };
 
@@ -243,24 +215,19 @@ obj.foo(); // 2
 
 3. 如果一个函数中有this，这个函数中包含多个对象，尽管这个函数是被最外层的对象所调用，this指向的也只是它上一级的对象
 
-```
+```js
 
 function foo() {
-
     console.log( this.a );
 }
 
 var obj2 = {
-
     a: 42,
-
     foo: foo
 };
 
 var obj1 = {
-
     a: 2,
-
     obj2: obj2
 };
 
@@ -270,16 +237,13 @@ obj1.obj2.foo(); // 42
 
 4. this与构造函数
 
-```
+```js
 
 function Fn(){
-
     this.user = "tom";
-
 }
 
 var a = new Fn();
-
 console.log(a.user); // tom
 
 ```
@@ -321,56 +285,39 @@ JS中有一些内置对象：String Number Boolean Object Function Array Date Re
 
 4. Object.defineProperty
 
-```
+```js
 
 var obj = {};
 
 Object.defineProperty(obj, 'a', {
-
     value: 2,
-
     writable: false,        // 不可写   obj.a = 3赋值操作无效, 严格模式下会报错
-
     configurable: false,    // 不可配置
-
     enumerable: false        // 不可枚举
-
 })
 
 ```
 
 enumerable详细介绍：
 
-```
+```js
 
 var obj = {};
-
 object.defineProperty(obj, 'a', {
-
     enumerable: true,
-
     value: 2
-
 })
 
 object.defineProperty(obj, 'b', {
-
     enumerable: false,
-
     value: 3
-
 })
 
 obj.b; // 3
-
 ('b' in obj); // true
-
 obj.hasOwnProperty('b') // true
-
 for (var k in obj) {
-
     console.log(k, obj[k]); // 'a', 2
-
 }
 
 ```
@@ -379,13 +326,11 @@ for (var k in obj) {
 
 对象的get
 
-```
+```js
 
 var obj = {
-
     a: 2;
 }
-
 obj.a; // 2
 
 ```
@@ -417,14 +362,11 @@ put被触发时，实际的行为取决于许多因素，包括对象中是否�
 
 数组：
 
-```
+```js
 
 let arr = [1, 2, 3]
-
 for (let i = 0; i < arr.length; i++) {
-    
     console.log(arr[i]) // 1 2 3
-
 }
 
 ```
@@ -435,14 +377,11 @@ for in遍历对象是无法直接获取到属性的值的，它实际上遍历�
 
 那么如何直接遍历值而不是数组下标呢，在es6中，提供了遍历数组的方法 for of
 
-```
+```js
 
 var arr = [1, 2, 3];
-
 for (let v of arr) {
-
     console.log(v); // 1 2 3
-
 }
 
 ```
@@ -480,12 +419,10 @@ for (let v of arr) {
 
 在之前我们提到，当你试图引用对象的属性时，会触发get操作，比如obj.a，对于默认的get操作来说，第一步是检查对象本身是否有这个属性，如果有就使用它，如果没有，就要用到原型链了
 
-```
+```js
 
 var another_obj = {b: 3};
-
 var obj = Object.create(another_obj);
-
 obj.b; // 3
 
 ```
@@ -522,19 +459,16 @@ obj.b; // 3
 
 一个类的多个实例，只能创建多个对象，它们的prtotype关联的是同一个对象。通过new关键字，如 var cat = new Animal(),将cat._proto_和Animal.prototype关联起来，这样一个对象就能通过委托访问另一个对象的属性和函数
 
-<<<<<<< HEAD
 ### 2. 再谈构造函数
 
 上述代码里谈到每一个函数都有一个prototype属性，指向一个对象，obj.prototype，即他的原型。而这个对象里有一个constructor属性，又指回这个函数。而在我们创建一个对象的时候，如 var cat = new Animal()，创建的对象也有一个constructor属性，指向创建这个对象的函数：cat.constructor === Animal。
 
 在这里，Animal还是一个普通的函数，只不过new会劫持所有普通的函数并用构造对象的形式来调用它。
 
-```
+```js
 
 function Animal() {
-
     console.log(animal);
-
 }
 
 var cat = new Animal()
@@ -545,14 +479,11 @@ var cat = new Animal()
 
 JS开发者一直在模仿类的行为：
 
-```
+```js
 
 function Animal(name) {
-
     this.name = name;
-
     this.voice = 'miaomiao'
-
 }
 
 Animal.prototype.sayName = function() {
@@ -560,11 +491,8 @@ Animal.prototype.sayName = function() {
 }
 
 var cat1 = new Animal('tom');
-
 var cat2 = new Animal('jerry');
-
 cat1.sayName(); // tom
-
 cat2.sayName(); // jerry
 
 ```
@@ -573,16 +501,14 @@ cat2.sayName(); // jerry
 
 而上面提到的cat.constructor === Animal同样委托了Animal.prototype，而Animal.prototype.constructor默认指向Animal，举例说明：
 
-```
+```js
 
 function Animal() {
     ...
 }
 
 Animal.prototype = {}                   <--- 我们在这里重新定义了Animal.prototype的指向
-
 var cat = new Animal()
-
 cat.constructor === Animal; // false    <--- 实际上cat并没有constructor属性，它会委托prototype上的Animal.prototype，它也没有（因                                              为我们上面更改了，默认是有的），所以它会继续委托，这次委托给顶端的Object.prototype，                                                它有这个属性，所以指向了Object
 
 cat.constructor === Object; // true
@@ -595,47 +521,32 @@ constructor并不是一个不可变的属性，它是不可枚举的，但是它
 
 前面我们了解到cat可以“继承”Animal.prototype并访问Animal.prototype的sayName()方法
 
-```
+```js
 
 function Animal (name) {
-
     this.name = name;
-
 }
 
 Animal.prototype.sayName = function() {
-
     return this.name
-
 }
 
-function Person(name, age) {                            <--- 这里同时会将Person.prototype关联到默认的对象（Person.prototype），                                                               然而我们并不想这样，因此我们需要更改
-
+function Person(name, age) {                 <--- 这里同时会将Person.prototype关联到默认的对象                                                                 (Person.prototype),然而我们并不想这样，因此我们需要更改
     Animal.call(this, name);
-
     this.age = age;
-
 }
 
 // es6以前的写法
-
-Person.prototype = Object.create(Animal.prototype);     <--- 这里会凭空创建一个新的对象并把对象内部的prototype关联到你指定的                                                                   Animal.prototype对象，即创建一个Person.prototype，并把它与                                                                      Animal.prototype相关联
-
+// 这里会凭空创建一个新的对象并把对象内部的prototype关联到你指定的Animal.prototype对象，即创建一个Person.prototype，并把它与Animal.prototype相关联
+Person.prototype = Object.create(Animal.prototype);     <--- 
 // es6的写法
-
 Object.setPrototypeOf(Person.prototype, Animal.prototype);
-
-
 Person.prototype.sayAge = function() {
-
     return this.age
-
 }
 
 var tom = new Person('tom', 18)
-
 tom.sayName; // 'tom'
-
 tom.sayAge; // 18
 
 ```
@@ -670,27 +581,19 @@ prototype就是存在于对象中的一个内部机制，实际上原型链的�
 
 注：
 
-```
+```js
 
 var another_obj = {
-
     cool: function() {
-
         console.log('cool');
-
     }
-
 }
 
 var obj = Object.create(another_obj);
-
 obj.cool; // 'cool'             <--- 不推荐这种写法，
-
 obj.doCool = function() {
-
     this.cool();                <--- 内部委托
 }
-
 obj.doCool(); // 'cool'
 
 ```
@@ -768,6 +671,3 @@ Object.definePorperty(foo, 'constructor', {
 a; // newFoo {}         <--- chrome使用了a.constructor.name进行跟踪
 
 ```
-=======
-Animal.prototype关联起来，这样一个对象就能通过委托访问另一个对象的属性和函数
->>>>>>> 315bc88cc64217a39260c06c9183a78d86129a19
